@@ -1,15 +1,26 @@
 from datasets import load_dataset
+import pandas as pd
 
-print("Loading dataset...")
+print("Loading dataset (streaming)...")
 
-# Load Hindi training data
-dataset = load_dataset("ai4bharat/MSMARCO-XI", "hi", split="train")
+dataset = load_dataset(
+    "ai4bharat/MSMARCO-XI",
+    data_files={"validation": "validation/hinval.parquet"},
+    streaming=True,
+)
 
-print("Dataset loaded!")
+print("Pulling a slice into memory...")
 
-# Access the data
-for example in dataset:
-    print(f"Query: {example['query']}")
-    print(f"Answers: {example['Answer']}")
-    print(f"Passages: {len(example['passages'])}")
-    break
+N = 2000  # adjust based on how much you want to index
+rows = []
+for i, example in enumerate(dataset["validation"]):
+    if i >= N:
+        break
+    rows.append(example)
+
+df = pd.DataFrame(rows)
+print(f"\nSlice shape: {df.shape}")
+print(df.iloc[0]["passages"])
+
+df.to_pickle("data/msmarco_slice.pkl")
+print("\nSaved slice to data/msmarco_slice.pkl")

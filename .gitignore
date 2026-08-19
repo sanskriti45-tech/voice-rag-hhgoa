@@ -1,7 +1,19 @@
-.env
-myenv/
+# Python
+__pycache__/
+*.py[cod]
 .venv/
 venv/
 env/
-__pycache__/
-*.pyc
+myenv/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dataset files
+*.pkl
+
+# OS files
+.DS_Store
+Thumbs.db
