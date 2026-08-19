@@ -1,4 +1,5 @@
 class QueryState:
+
     def __init__(self):
         self.partial_query = ""
         self.predictions = []
@@ -8,11 +9,16 @@ class QueryState:
     def update(self, text):
         self.partial_query = text
 
-    def set_predictions(self, predictions):
-        self.predictions = predictions
+def predict_queries(partial_query):
 
-    def set_speculative_results(self, results):
-        self.speculative_results = results
+    partial = partial_query.lower()
 
-    def set_final_query(self, text):
-        self.final_query = text
+    if "collapse of the" in partial:
+        return [
+            partial + " Roman Empire",
+            partial + " Soviet Union",
+            partial + " Ottoman Empire"
+        ]
+
+    return [partial]
+

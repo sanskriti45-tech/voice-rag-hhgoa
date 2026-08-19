@@ -1,8 +1,8 @@
 import time
 from speech.speech_to_text import transcribe_audio, transcribe_audio_chunks
 from chunking.query_state import QueryState
-from chunking.query_predictor import predict_queries
-from chunking.query_selector import choose_prediction
+from chunking.query_state import predict_queries
+from chunking.ss_search import choose_prediction
 from chunking.latency_admin import decide_action
 from generation.speculative_generator import speculative_generate
 from generation.generator import generate_answer

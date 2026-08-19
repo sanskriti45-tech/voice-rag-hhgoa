@@ -8,10 +8,75 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from rank_bm25 import BM25Okapi
 
-from chunking.document_chunker import chunk_passage
-
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+DEFAULT_CHUNK_SIZE = 200
+DEFAULT_CHUNK_OVERLAP = 30
+DEFAULT_MIN_CHUNK_WORDS = 20
+
+
+def chunk_passage(
+    passage_text,
+    metadata=None,
+    chunk_size=DEFAULT_CHUNK_SIZE,
+    overlap=DEFAULT_CHUNK_OVERLAP,
+    min_chunk_words=DEFAULT_MIN_CHUNK_WORDS,
+):
+    if passage_text is None:
+        return []
+
+    text = str(passage_text).strip()
+    if not text:
+        return []
+
+    if chunk_size <= 0:
+        raise ValueError("chunk_size must be greater than 0")
+    if overlap < 0:
+        raise ValueError("overlap must be >= 0")
+    if overlap >= chunk_size:
+        raise ValueError("overlap must be smaller than chunk_size")
+
+    words = text.split()
+    if len(words) <= chunk_size:
+        payload = dict(metadata or {})
+        payload["text"] = text
+        return [payload]
+
+    step = chunk_size - overlap
+    if step <= 0:
+        step = 1
+
+    chunks = []
+    start = 0
+    while start < len(words):
+        end = min(start + chunk_size, len(words))
+        chunk_words = words[start:end]
+        chunk_text = " ".join(chunk_words).strip()
+
+        if not chunk_text:
+            break
+
+        if len(chunk_words) < min_chunk_words and start != 0:
+            if chunks:
+                chunks[-1]["text"] = (chunks[-1]["text"] + " " + chunk_text).strip()
+            break
+
+        payload = dict(metadata or {})
+        payload["text"] = chunk_text
+        chunks.append(payload)
+
+        if end == len(words):
+            break
+
+        start += step
+
+    if not chunks:
+        payload = dict(metadata or {})
+        payload["text"] = text
+        return [payload]
+
+    return chunks
 
 LANGUAGE = "hi"
 COLLECTION = "rag_passages"
@@ -93,12 +158,31 @@ def get_bm25_results(query, top_k=50):
         return []
 
 
-def hybrid_search(query, dense_results, bm25_results, alpha=0.5):
+def hybrid_search(query, dense_results=None, bm25_results=None, alpha=0.5):
+    if dense_results is None or bm25_results is None:
+        dense_results = get_dense_results(query, top_k=50)
+        bm25_results = get_bm25_results(query, top_k=50)
+
     scores = {}
-    for rank, r in enumerate(dense_results):
-        scores[r.payload["text"]] = scores.get(r.payload["text"], 0) + alpha * (1 / (rank + 1))
-    for rank, (chunk, _) in enumerate(bm25_results):
-        scores[chunk["text"]] = scores.get(chunk["text"], 0) + (1 - alpha) * (1 / (rank + 1))
+    for rank, r in enumerate(dense_results or []):
+        text = r.payload["text"] if hasattr(r, "payload") else r.get("text")
+        if text is None:
+            continue
+        scores[text] = scores.get(text, 0) + alpha * (1 / (rank + 1))
+
+    for rank, item in enumerate(bm25_results or []):
+        if isinstance(item, tuple) and len(item) == 2:
+            chunk, _ = item
+            text = chunk["text"] if isinstance(chunk, dict) else str(chunk)
+        elif isinstance(item, dict):
+            text = item.get("text")
+        else:
+            continue
+
+        if text is None:
+            continue
+        scores[text] = scores.get(text, 0) + (1 - alpha) * (1 / (rank + 1))
+
     ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return ranked
 

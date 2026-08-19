@@ -4,52 +4,57 @@ from sarvamai import SarvamAI
 
 load_dotenv()
 
-_client = None
+client = SarvamAI(api_subscription_key=os.getenv("SARVAM_API_KEY"))
+
+MODEL = "saaras:v3"
+AUTO_DETECT = "unknown"  # Sarvam's value for "detect the language for me"
 
 
-def _get_client():
-    """Lazily creates a single shared SarvamAI client instead of one per call."""
-    global _client
-    if _client is None:
-        api_key = os.getenv("SARVAM_API_KEY")
-        if not api_key:
-            raise RuntimeError("SARVAM_API_KEY is not set — check your .env file")
-        _client = SarvamAI(api_subscription_key=api_key)
-    return _client
-
-
-def transcribe_audio(file_path, language="hi-IN", model="saaras:v3", mode="transcribe"):
+def transcribe_audio(file_path: str, language_code: str = AUTO_DETECT) -> dict:
     """
-    Transcribes one audio file/chunk using Sarvam's Saaras model.
-    file_path can be a path string or an open file-like object.
-    Raises on failure so the caller decides whether to retry or skip.
-    """
-    client = _get_client()
+    Transcribes an audio file to text.
 
-    if hasattr(file_path, "read"):
-        response = client.speech_to_text.transcribe(
-            file=file_path, language=language, model=model, mode=mode,
-        )
+    Args:
+        file_path: path to the audio file (wav/mp3/etc).
+        language_code: e.g. "hi-IN", "ta-IN", "en-IN". Defaults to auto-detect
+            ("unknown"), which lets Sarvam identify the spoken language itself
+            rather than the caller having to know it in advance.
+
+    Returns:
+        {
+            "transcript": str,
+            "language_code": str | None,   # detected/used language, if returned
+            "success": bool,
+            "error": str | None,
+        }
+    """
+    try:
+        with open(file_path, "rb") as audio_file:
+            response = client.speech_to_text.transcribe(
+                file=audio_file,
+                model=MODEL,
+                language_code=language_code,
+            )
+
+        return {
+            "transcript": response.transcript,
+            "language_code": getattr(response, "language_code", language_code),
+            "success": True,
+            "error": None,
+        }
+
+    except Exception as e:
+        return {
+            "transcript": None,
+            "language_code": None,
+            "success": False,
+            "error": str(e),
+        }
+
+
+if __name__ == "__main__":
+    result = transcribe_audio("sample_audio.wav")
+    if result["success"]:
+        print(f"[{result['language_code']}] {result['transcript']}")
     else:
-        response = client.speech_to_text.transcribe(
-            file_path=file_path, language=language, model=model, mode=mode,
-        )
-
-    return response.transcript
-
-
-def transcribe_audio_chunks(chunk_paths, language="hi-IN", model="saaras:v3"):
-    """
-    Transcribes a sequence of audio chunks (growing partial recordings captured
-    while the user is still speaking) into an ordered list of partial transcripts.
-    A chunk that fails to transcribe is skipped, not fatal to the whole request.
-    """
-    partial_transcripts = []
-    for chunk_path in chunk_paths:
-        try:
-            text = transcribe_audio(chunk_path, language=language, model=model)
-            if text:
-                partial_transcripts.append(text)
-        except Exception as e:
-            print(f"[stt chunk error] {chunk_path}: {e}")
-    return partial_transcripts
+        print(f"Transcription failed: {result['error']}")
