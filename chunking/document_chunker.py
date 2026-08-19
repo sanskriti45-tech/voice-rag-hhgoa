@@ -1,7 +1,6 @@
 import re
 
 def fixed_size_chunk(text, chunk_size=200, overlap=50):
-    """Splits text into fixed-size word chunks with overlap."""
     words = text.split()
     chunks = []
     start = 0
@@ -14,7 +13,6 @@ def fixed_size_chunk(text, chunk_size=200, overlap=50):
 
 
 def semantic_chunk(text, max_sentences=5):
-    """Splits text by sentence boundaries, grouping N sentences per chunk."""
     sentences = re.split(r'(?<=[.!?]) +', text.strip())
     chunks = []
     for i in range(0, len(sentences), max_sentences):
@@ -25,7 +23,6 @@ def semantic_chunk(text, max_sentences=5):
 
 
 def metadata_aware_chunk(text, metadata, strategy="fixed", **kwargs):
-    """Wraps chunks with metadata (query_id, language, source) for filtering at retrieval time."""
     if strategy == "fixed":
         raw_chunks = fixed_size_chunk(text, **kwargs)
     else:
@@ -35,3 +32,28 @@ def metadata_aware_chunk(text, metadata, strategy="fixed", **kwargs):
         {"text": chunk, "metadata": {**metadata, "chunk_index": i}}
         for i, chunk in enumerate(raw_chunks)
     ]
+def choose_strategy(text):
+    word_count = len(text.split())
+    sentence_count = len(re.split(r'(?<=[.!?]) +', text.strip()))
+
+    if word_count <= 40:
+        return "none"
+    if sentence_count >= 3:
+        return "semantic"
+    return "fixed"
+def chunk_passage(text, metadata):
+    strategy = choose_strategy(text)
+
+    if strategy == "none":
+        return [{"text": text, "metadata": {**metadata, "chunk_index": 0, "strategy": "none"}}]
+
+    if strategy == "semantic":
+        return metadata_aware_chunk(
+            text, {**metadata, "strategy": "semantic"},
+            strategy="semantic", max_sentences=3,
+        )
+
+    return metadata_aware_chunk(
+        text, {**metadata, "strategy": "fixed"},
+        strategy="fixed", chunk_size=100, overlap=25,
+    )

@@ -7,7 +7,8 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 MODEL = "gpt-4o-mini"
-MAX_RETRIES = 3
+MAX_RETRIES = 2
+RETRY_BACKOFF_MS = 50
 MAX_CONTEXT_CHUNKS = 5
 
 
@@ -56,8 +57,8 @@ def generate_answer(query, retrieved_results):
             }
         except Exception as e:
             last_error = e
-            time.sleep(1 * attempt)  # simple backoff
-
+            if attempt < MAX_RETRIES:
+                time.sleep((RETRY_BACKOFF_MS * attempt) / 1000)  # milliseconds, not seconds
     return {
         "answer": None,
         "context_used": context,

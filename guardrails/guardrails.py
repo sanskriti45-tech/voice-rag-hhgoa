@@ -5,11 +5,20 @@ from openai import OpenAI
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-UNSAFE_PATTERNS = [
-    r"\b(kill|suicide|self[\s-]?harm|bomb|weapon|attack)\b",
-    r"\b(hack|exploit|malware|ddos)\b",
+UNSAFE_PATTERNS_EN = [
+    r"\b(kill|kills|killing|suicid\w*|self[\s-]?harm\w*)\b",
+    r"\b(bomb\w*|explosiv\w*|weapon\w*|gun\w*|attack\w*)\b",
+    r"\b(hack\w*|exploit\w*|malware|ddos|sql\s?inject\w*)\b",
+    r"\b(poison\w*|overdose)\b",
 ]
+UNSAFE_PATTERNS_HI = [
+    r"(आत्महत्या|खुदकुशी)",       
+    r"(हत्या|मार डाल)",      
+    r"(बम|विस्फोटक|हथियार)",      
+    r"(हैक|मैलवेयर)",            
+]
+
+UNSAFE_PATTERNS = UNSAFE_PATTERNS_EN + UNSAFE_PATTERNS_HI
 
 OFF_TOPIC_SCORE_THRESHOLD = 0.15
 
@@ -20,9 +29,10 @@ NOT_GROUNDED_MESSAGE = "I don't have enough grounded information in the retrieve
 
 def check_unsafe_input(query: str) -> bool:
     """Returns True if the query matches an unsafe/inappropriate pattern."""
+    if not query or not query.strip():
+        return False
     lowered = query.lower()
-    return any(re.search(pattern, lowered) for pattern in UNSAFE_PATTERNS)
-
+    return any(re.search(pattern, lowered, re.IGNORECASE) for pattern in UNSAFE_PATTERNS)
 
 def check_off_topic(retrieved_results, threshold: float = OFF_TOPIC_SCORE_THRESHOLD) -> bool:
     """Returns True if the query is likely off-topic (poor retrieval match)."""
