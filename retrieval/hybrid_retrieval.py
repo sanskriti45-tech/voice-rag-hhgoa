@@ -13,7 +13,7 @@ from chunking.document_chunker import chunk_passage
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-LLANGUAGE = "hi"
+LANGUAGE = "hi"
 COLLECTION = "rag_passages"
 
 _index_state = {"built": False}
