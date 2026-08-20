@@ -21,4 +21,3 @@ def predict_queries(partial_query):
         ]
 
     return [partial]
-

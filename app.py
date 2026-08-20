@@ -1,30 +1,35 @@
 import time
 from speech.speech_to_text import transcribe_audio, transcribe_audio_chunks
-from chunking.query_state import QueryState
-from chunking.query_state import predict_queries
+from chunking.query_state import QueryState, predict_queries
 from chunking.ss_search import choose_prediction
 from chunking.latency_admin import decide_action
 from generation.speculative_generator import speculative_generate
 from generation.generator import generate_answer
 from retrieval.hybrid_retrieval import get_dense_results, get_bm25_results, hybrid_search
 from guardrails.guardrails import apply_guardrails, check_unsafe_input, REFUSAL_MESSAGE
-def process_voice_audio(partial_audio_paths, final_audio_path, language="hi-IN"):
-    partial_transcripts = transcribe_audio_chunks(partial_audio_paths, language=language)
 
-    try:
-        final_query = transcribe_audio(final_audio_path, language=language)
-    except Exception as e:
+
+def process_voice_audio(partial_audio_paths, final_audio_path, language="hi-IN"):
+    partial_transcripts = transcribe_audio_chunks(partial_audio_paths, language_code=language)
+
+    final_result = transcribe_audio(final_audio_path, language_code=language)
+    if not final_result["success"]:
         return {
             "final_answer": "Sorry, I couldn't transcribe that — please try again.",
             "guardrail_passed": False,
             "guardrail_reason": "stt_failed",
-            "error": str(e),
+            "error": final_result["error"],
         }
+
+    final_query = final_result["transcript"]
     return process_voice_query(partial_transcripts, final_query)
+
+
 def process_voice_query(partial_transcripts, final_query):
     start = time.perf_counter()
     state = QueryState()
     speculative_results = {}
+
     for partial in partial_transcripts:
         if check_unsafe_input(partial):
             continue  # don't spend generation calls speculating on unsafe partials
@@ -48,6 +53,7 @@ def process_voice_query(partial_transcripts, final_query):
             "action_taken": "REFUSED",
             "elapsed_ms": elapsed_ms,
         }
+
     prediction, score = choose_prediction(final_query, list(speculative_results.keys()) or [final_query])
     elapsed_ms = (time.perf_counter() - start) * 1000
 
@@ -82,6 +88,8 @@ def process_voice_query(partial_transcripts, final_query):
     result["guardrail_reason"] = guard_check["reason"]
 
     return result
+
+
 if __name__ == "__main__":
     partials = ["who was the", "who was the collapse of the"]
     final = "what caused the collapse of the roman empire"

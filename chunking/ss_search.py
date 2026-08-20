@@ -43,9 +43,3 @@ def choose_prediction(final_query, predictions):
             best_prediction = prediction
 
     return best_prediction, best_score
-
-
-prediction, score = choose_prediction(
-    final_query,
-    state.predictions
-)
