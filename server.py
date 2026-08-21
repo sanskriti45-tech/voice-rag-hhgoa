@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -23,8 +24,9 @@ def voice_query():
         final_path = os.path.join(tmpdir, "final.webm")
         final_audio.save(final_path)
 
+        shutil.copy(final_path, "C:/Users/yasha/OneDrive/Desktop/debug_audio.webm")
         partial_paths = []
-        for i, pf in enumerate(partial_files):
+    for i, pf in enumerate(partial_files):
             p_path = os.path.join(tmpdir, f"partial_{i}.webm")
             pf.save(p_path)
             partial_paths.append(p_path)
