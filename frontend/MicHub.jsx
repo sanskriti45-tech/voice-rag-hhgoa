@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "./Logo.jsx";
 
-const API_ENDPOINT = "/api/voice-query";
+const API_ENDPOINT = "https://south-remedy-atm-nationally.trycloudflare.com/api/voice-query";
 const LANGUAGE = "hi-IN";
 
 export function MicHub({ onResult }) {
