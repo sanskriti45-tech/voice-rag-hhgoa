@@ -10,9 +10,16 @@ from guardrails.guardrails import apply_guardrails, check_unsafe_input, REFUSAL_
 
 
 def process_voice_audio(partial_audio_paths, final_audio_path, language="hi-IN"):
-    partial_transcripts = transcribe_audio_chunks(partial_audio_paths, language_code=language)
+    partial_transcripts = transcribe_audio_chunks(
+        partial_audio_paths,
+        language_code=language
+    )
 
-    final_result = transcribe_audio(final_audio_path, language_code=language)
+    final_result = transcribe_audio(
+        final_audio_path,
+        language_code=language
+    )
+
     if not final_result["success"]:
         return {
             "final_answer": "Sorry, I couldn't transcribe that — please try again.",
@@ -22,10 +29,14 @@ def process_voice_audio(partial_audio_paths, final_audio_path, language="hi-IN")
         }
 
     final_query = final_result["transcript"]
-    return process_voice_query(partial_transcripts, final_query)
 
+    return process_voice_query(
+        partial_transcripts,
+        final_query,
+        language=language
+    )
 
-def process_voice_query(partial_transcripts, final_query):
+def process_voice_query(partial_transcripts, final_query, language="hi-IN"):
     start = time.perf_counter()
     state = QueryState()
     speculative_results = {}
@@ -75,7 +86,11 @@ def process_voice_query(partial_transcripts, final_query):
         dense_results = get_dense_results(final_query, top_k=50)
         bm25_results = get_bm25_results(final_query, top_k=50)
         retrieved = hybrid_search(final_query, dense_results, bm25_results, alpha=0.5)
-        result = generate_answer(final_query, retrieved)
+        result = generate_answer(
+    final_query,
+    retrieved,
+    language=language
+)
         result["source"] = "live_search"
         result["retrieved"] = retrieved
 

@@ -19,6 +19,13 @@ const ACTION_BADGE = {
   DEEP_SEARCH: { label: "🔍 deep search", cls: "searched" },
 };
 
+const suggestions = [
+  { label: "भारत की राजधानी क्या है?", warn: false },
+  { label: "Hybrid retrieval overview", warn: false },
+  { label: "Chunking strategy used", warn: false },
+  { label: "Refusal Test ⚠", warn: true, query: "How do I hack into a website?" },
+];
+
 export function Chat() {
   const [messages, setMessages] = useState([
     { who: "bot", text: "Hey there! 🧠 I'm your RAG-O-RAMA assistant. Ask me anything about your knowledge sources, or tap the mic to speak naturally." },
@@ -34,15 +41,19 @@ export function Chat() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [messages]);
 
-  function send() {
-    const text = input.trim();
-    if (!text) return;
-    append({ who: "user", text });
+  function send(text) {
+    const value = (text ?? input).trim();
+    if (!value) return;
+    append({ who: "user", text: value });
     setInput("");
     setTimeout(
       () => append({ who: "bot", text: mockBotReplies[Math.floor(Math.random() * mockBotReplies.length)] }),
       550 + Math.random() * 500
     );
+  }
+
+  function onSuggestion(s) {
+    send(s.query || s.label);
   }
 
   function onResult(result) {
@@ -110,6 +121,14 @@ export function Chat() {
             </AnimatePresence>
           </div>
 
+          <div className="suggest-row">
+            {suggestions.map((s, i) => (
+              <motion.div key={i} className={"suggest-chip" + (s.warn ? " warn" : "")} whileTap={{ scale: 0.94 }} onClick={() => onSuggestion(s)}>
+                {s.label}
+              </motion.div>
+            ))}
+          </div>
+
           <div className="chat-inputbar">
             <div className="field">
               <input
@@ -119,7 +138,7 @@ export function Chat() {
                 onKeyDown={(e) => e.key === "Enter" && send()}
               />
             </div>
-            <motion.div className="round-btn send" whileTap={{ scale: 0.88 }} onClick={send}>
+            <motion.div className="round-btn send" whileTap={{ scale: 0.88 }} onClick={() => send()}>
               <Ic.send width="17" height="17" />
             </motion.div>
           </div>

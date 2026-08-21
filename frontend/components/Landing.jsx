@@ -39,7 +39,7 @@ export function Landing({ go }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.28, duration: 0.4 }}
         >
-          <motion.button className="btn btn-primary" whileTap={{ scale: 0.95 }} whileHover={{ filter: "brightness(1.08)" }} onClick={() => go("auth")}>Get Started →</motion.button>
+          <motion.button className="btn btn-primary" whileTap={{ scale: 0.95 }} whileHover={{ filter: "brightness(1.08)" }} onClick={() => go("home")}>Get Started →</motion.button>
           <motion.button className="btn btn-ghost" whileTap={{ scale: 0.95 }} onClick={() => go("catalog")}>Browse Catalog ›</motion.button>
         </motion.div>
       </div>

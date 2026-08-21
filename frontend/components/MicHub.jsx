@@ -2,11 +2,16 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Logo } from "./Logo.jsx";
 
-const API_ENDPOINT = "https://alpha-reggae-sharon-engine.trycloudflare.com/api/voice-query";
-const LANGUAGE = "hi-IN";
+const API_ENDPOINT = "/api/voice-query";
+const LANGUAGES = [
+  { code: "hi-IN", label: "हिंदी" },
+  { code: "mr-IN", label: "मराठी" },
+  { code: "en-IN", label: "English" },
+];
 
 export function MicHub({ onResult }) {
   const [phase, setPhase] = useState("idle");
+  const [language, setLanguage] = useState("hi-IN");
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -117,7 +122,7 @@ export function MicHub({ onResult }) {
     const formData = new FormData();
     formData.append("final_audio", finalBlob, "final.webm");
     partialBlobs.forEach((chunk, i) => formData.append("partial_audios", chunk, `partial_${i}.webm`));
-    formData.append("language", LANGUAGE);
+    formData.append("language", language);
 
     try {
       const res = await fetch(API_ENDPOINT, { method: "POST", body: formData });
@@ -217,6 +222,18 @@ export function MicHub({ onResult }) {
         </motion.div>
       </div>
       <div className="mic-hint">{hintText}</div>
+
+      <div className="lang-row">
+        {LANGUAGES.map((l) => (
+          <div
+            key={l.code}
+            className={"lang-chip" + (language === l.code ? " active" : "")}
+            onClick={() => !active && !processing && setLanguage(l.code)}
+          >
+            {l.label}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

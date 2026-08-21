@@ -17,3 +17,6 @@ myenv/
 # OS files
 .DS_Store
 Thumbs.db
+# Dependencies
+node_modules/
+frontend/node_modules/

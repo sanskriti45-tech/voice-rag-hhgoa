@@ -29,7 +29,7 @@ export function TopNav({ view, go }) {
           </button>
         ))}
       </div>
-      <motion.div className="logout-btn" whileTap={{ scale: 0.88 }} onClick={() => go("landing")} title="Sign out">
+      <motion.div className="logout-btn" whileTap={{ scale: 0.88 }} onClick={() => go("landing")} title="Back to start">
         <Ic.logout width="16" height="16" />
       </motion.div>
     </div>
