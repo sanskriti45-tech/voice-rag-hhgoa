@@ -1,6 +1,6 @@
 import os
 import tempfile
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory,send_file
 from flask_cors import CORS
 
 from app import process_voice_audio
@@ -11,6 +11,11 @@ app = Flask(__name__)
 CORS(app)
 
 
+
+@app.route('/')
+def index():
+    return send_file('rag-o-rama.html') 
+    
 @app.route("/")
 def serve_index():
     return send_from_directory(FRONTEND_DIR, "index.html")
