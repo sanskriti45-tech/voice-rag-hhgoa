@@ -14,7 +14,7 @@ CORS(app)
 
 @app.route('/')
 def index():
-    return send_file('rag-o-rama.html') 
+    return send_file('frontend/rag-o-rama.html')
     
 @app.route("/")
 def serve_index():
