@@ -5,7 +5,9 @@ from flask_cors import CORS
 
 from app import process_voice_audio
 
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "Frontend")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+DIST_DIR = os.path.join(FRONTEND_DIR, "dist")
 
 app = Flask(__name__)
 CORS(app)
@@ -18,17 +20,17 @@ def index():
     
 @app.route("/")
 def serve_index():
-    return send_from_directory(FRONTEND_DIR, "index.html")
+    return send_from_directory(DIST_DIR, "index.html")
 
 
 @app.route("/bundle.js")
 def serve_bundle():
-    return send_from_directory(os.path.join(FRONTEND_DIR, "dist"), "bundle.js")
+    return send_from_directory(DIST_DIR, "bundle.js")
 
 
 @app.route("/styles.css")
 def serve_styles():
-    return send_from_directory(FRONTEND_DIR, "styles.css")
+    return send_from_directory(DIST_DIR, "styles.css")
 
 
 @app.route("/api/voice-query", methods=["POST"])
@@ -95,4 +97,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=5000,
         debug=True
+    )
     )
