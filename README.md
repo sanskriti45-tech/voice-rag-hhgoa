@@ -989,5 +989,3 @@ And when the system doesn't have enough evidence:
 ### **Speak. Retrieve. Verify. Answer.**
 
 > **Voice in. Evidence retrieved. Answers grounded.**
-
-```
