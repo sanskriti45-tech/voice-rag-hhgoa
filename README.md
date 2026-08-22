@@ -1,4 +1,3 @@
-````markdown
 # 🎙️ RAG-O-RAMA
 
 ## Voice-Enabled Retrieval-Augmented Generation System
