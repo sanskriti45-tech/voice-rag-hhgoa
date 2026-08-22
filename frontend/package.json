@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "esbuild main.jsx --bundle --loader:.jsx=jsx --loader:.png=dataurl --outfile=dist/bundle.js"
+    "build": "esbuild main.jsx --bundle --loader:.jsx=jsx --loader:.png=dataurl --outfile=dist/bundle.js && copy index.html dist\\index.html && copy styles.css dist\\styles.css"
   },
   "dependencies": {
     "react": "^18.2.0",
